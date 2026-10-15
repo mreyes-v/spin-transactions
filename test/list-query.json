@@ -1,0 +1,7 @@
+{
+  "accountId": "acc-1",
+  "status": "EXECUTED",
+  "type": "CREDIT",
+  "page": 1,
+  "limit": 20
+}

@@ -1,0 +1,7 @@
+{
+  "accountId": "acc-1",
+  "type": "DEBIT",
+  "amount": 10000.01,
+  "currency": "MXN",
+  "description": "debito sobre el tope"
+}

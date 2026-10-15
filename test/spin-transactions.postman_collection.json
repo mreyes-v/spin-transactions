@@ -1,0 +1,353 @@
+{
+  "info": {
+    "name": "spin-transactions",
+    "description": "Write en {{writeBase}} (POST /transactions). Read en {{readBase}} (GET /transactions). En local son http://localhost:8080 y http://localhost:8081. En AWS los dos apuntan al DNS del ALB.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "writeBase",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "readBase",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "accountId",
+      "value": "acc-1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Write health",
+          "request": {
+            "method": "GET",
+            "url": "{{writeBase}}/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('write health 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Read health",
+          "request": {
+            "method": "GET",
+            "url": "{{readBase}}/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('read health 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Write",
+      "item": [
+        {
+          "name": "Credit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"type\": \"CREDIT\",\n  \"amount\": 10,\n  \"currency\": \"MXN\",\n  \"description\": \"deposito\"\n}"
+            },
+            "url": "{{writeBase}}/transactions",
+            "description": "Mismo cuerpo que test/credit.json. 201 si el PSP aprueba, 422 si rechaza."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('aprobada o rechazada por el PSP', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([201, 422]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Debit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"type\": \"DEBIT\",\n  \"amount\": 5,\n  \"currency\": \"MXN\",\n  \"description\": \"retiro\"\n}"
+            },
+            "url": "{{writeBase}}/transactions",
+            "description": "Mismo cuerpo que test/debit.json. 201 si el PSP aprueba, 422 si rechaza."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('aprobada o rechazada por el PSP', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([201, 422]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Moneda no soportada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"type\": \"CREDIT\",\n  \"amount\": 10,\n  \"currency\": \"USD\",\n  \"description\": \"moneda no soportada\"\n}"
+            },
+            "url": "{{writeBase}}/transactions",
+            "description": "Mismo cuerpo que test/invalid-currency.json. Responde 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('validacion 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Monto en el minimo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"type\": \"CREDIT\",\n  \"amount\": 1,\n  \"currency\": \"MXN\",\n  \"description\": \"monto en el minimo\"\n}"
+            },
+            "url": "{{writeBase}}/transactions",
+            "description": "Mismo cuerpo que test/amount-too-small.json. El monto tiene que ser mayor a 1.00. Responde 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('validacion 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Debito sobre el tope",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"type\": \"DEBIT\",\n  \"amount\": 10000.01,\n  \"currency\": \"MXN\",\n  \"description\": \"debito sobre el tope\"\n}"
+            },
+            "url": "{{writeBase}}/transactions",
+            "description": "Mismo cuerpo que test/debit-over-limit.json. El debito no puede pasar de 10000.00. Responde 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('validacion 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tipo no soportado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountId\": \"{{accountId}}\",\n  \"type\": \"TRANSFER\",\n  \"amount\": 10,\n  \"currency\": \"MXN\",\n  \"description\": \"tipo no soportado\"\n}"
+            },
+            "url": "{{writeBase}}/transactions",
+            "description": "Mismo cuerpo que test/invalid-type.json. Responde 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('validacion 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Read",
+      "item": [
+        {
+          "name": "Listar por cuenta",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{readBase}}/transactions?accountId={{accountId}}&page=1&limit=20",
+              "host": ["{{readBase}}"],
+              "path": ["transactions"],
+              "query": [
+                {
+                  "key": "accountId",
+                  "value": "{{accountId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "GET solo existe en el servicio read."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('listado 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  var body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('data');",
+                  "  pm.expect(body).to.have.property('total');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar creditos ejecutados",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{readBase}}/transactions?accountId={{accountId}}&status=EXECUTED&type=CREDIT&page=1&limit=20",
+              "host": ["{{readBase}}"],
+              "path": ["transactions"],
+              "query": [
+                {
+                  "key": "accountId",
+                  "value": "{{accountId}}"
+                },
+                {
+                  "key": "status",
+                  "value": "EXECUTED"
+                },
+                {
+                  "key": "type",
+                  "value": "CREDIT"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Mismos filtros que test/list-query.json."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('listado filtrado 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

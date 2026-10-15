@@ -1,0 +1,7 @@
+{
+  "accountId": "acc-1",
+  "type": "DEBIT",
+  "amount": 5,
+  "currency": "MXN",
+  "description": "retiro"
+}

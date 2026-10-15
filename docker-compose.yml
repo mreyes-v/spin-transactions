@@ -1,0 +1,22 @@
+# Postgres solo para correr en local. En AWS la base es el RDS de template.yaml.
+name: spin-transactions
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: txadmin
+      POSTGRES_PASSWORD: txadmin
+      POSTGRES_DB: transactions
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U txadmin -d transactions"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - spin-transactions-pg:/var/lib/postgresql/data
+
+volumes:
+  spin-transactions-pg:

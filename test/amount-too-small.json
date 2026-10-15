@@ -1,0 +1,7 @@
+{
+  "accountId": "acc-1",
+  "type": "CREDIT",
+  "amount": 1,
+  "currency": "MXN",
+  "description": "monto en el minimo"
+}

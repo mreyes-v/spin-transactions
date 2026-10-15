@@ -1,0 +1,7 @@
+{
+  "accountId": "acc-1",
+  "type": "CREDIT",
+  "amount": 10,
+  "currency": "MXN",
+  "description": "deposito"
+}
