@@ -1,6 +1,6 @@
 # spin-transactions
 
-Servicio de transacciones en DDD hexagonal. Lectura y escritura son dos procesos. En AWS corren como dos servicios ECS Fargate detrás de un ALB. La infraestructura está en `template.yaml` (SAM).
+Este proyecto consiste en una API REST que soporta operaciones de CREDIT y DEBIT; y lista de operaciones.
 
 ## Arquitectura de sistema
 
